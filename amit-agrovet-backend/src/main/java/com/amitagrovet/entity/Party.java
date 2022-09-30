@@ -13,14 +13,20 @@ import javax.validation.constraints.NotBlank;
 import com.amitagrovet.entity.enums.PartyType;
 
 @Entity
-@Table(name="party", uniqueConstraints = @UniqueConstraint(name = "party_uk_1", columnNames = { "gst_number" }) )
+@Table(name="party")
 public class Party extends BaseEntity{
 	
 	@NotBlank(message = "Name is mandatory")
 	@Column(name = "name", length = 150)
 	String name;
 	
-	@Column(name = "gst_number", length = 20, unique = true)
+	@Column(name = "address", length = 255)
+	String address;
+	
+	@Column(name = "state_code", length = 5)
+	String stateCode;
+	
+	@Column(name = "gst_number", length = 20)
 	String gstNumber;
 	
 	@Enumerated(EnumType.STRING)
@@ -29,6 +35,17 @@ public class Party extends BaseEntity{
 	
 	@Column(precision = 10, scale = 2)
 	BigDecimal price;
+	
+	@Column(name = "is_deleted", columnDefinition = "boolean default false")
+	Boolean isDeleted = false;
+
+	public Boolean getIsDeleted() {
+		return isDeleted;
+	}
+
+	public void setIsDeleted(Boolean isDeleted) {
+		this.isDeleted = isDeleted;
+	}
 
 	public String getName() {
 		return name;
@@ -36,6 +53,22 @@ public class Party extends BaseEntity{
 
 	public void setName(String name) {
 		this.name = name;
+	}
+	
+	public String getAddress() {
+		return address;
+	}
+
+	public void setAddress(String address) {
+		this.address = address;
+	}
+
+	public String getStateCode() {
+		return stateCode;
+	}
+
+	public void setStateCode(String stateCode) {
+		this.stateCode = stateCode;
 	}
 
 	public String getGstNumber() {
@@ -64,8 +97,8 @@ public class Party extends BaseEntity{
 
 	@Override
 	public String toString() {
-		return "Party [name=" + name + ", gstNumber=" + gstNumber + ", type=" + type + ", price=" + price
-				+ "]";
+		return "Party [name=" + name + ", address=" + address + ", stateCode=" + stateCode + ", gstNumber=" + gstNumber
+				+ ", type=" + type + ", price=" + price + ", isDeleted=" + isDeleted + "]";
 	}
 	
 }

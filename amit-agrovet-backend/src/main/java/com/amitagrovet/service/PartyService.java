@@ -11,6 +11,6 @@ public interface PartyService {
 	
 	List<Party> getAllParties();
 	
-	Party addParty(Party newParty);
+	Party addOrEditParty(Party newParty);
 
 }

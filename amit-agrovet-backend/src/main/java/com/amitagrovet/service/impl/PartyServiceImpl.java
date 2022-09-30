@@ -28,7 +28,7 @@ public class PartyServiceImpl implements PartyService{
 		return partyRepo.findAll();
 	}
 	
-	public Party addParty(Party newParty) {
+	public Party addOrEditParty(Party newParty) {
 		return partyRepo.save(newParty);
 	}
 

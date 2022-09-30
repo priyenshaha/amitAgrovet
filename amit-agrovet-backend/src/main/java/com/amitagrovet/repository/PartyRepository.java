@@ -12,6 +12,4 @@ import com.amitagrovet.entity.Party;
 @Repository
 public interface PartyRepository extends JpaRepository<Party, Integer>{
 
-	
-
 }
