@@ -15,13 +15,13 @@
 	<parameter name="address" class="java.lang.String"/>
 	<parameter name="gstNumber" class="java.lang.String"/>
 	<parameter name="stateCode" class="java.lang.String"/>
-	<parameter name="billNumber" class="java.lang.String"/>
+	<parameter name="billNumber" class="java.lang.Integer"/>
 	<parameter name="vehicle" class="java.lang.String"/>
 	<parameter name="totalInWords" class="java.lang.String"/>
 	<parameter name="date" class="java.time.LocalDate">
 		<defaultValueExpression><![CDATA[java.time.LocalDate.now()]]></defaultValueExpression>
 	</parameter>
-	<parameter name="quantity" class="java.lang.Integer"/>
+	<parameter name="quantity" class="java.math.BigDecimal"/>
 	<parameter name="price" class="java.math.BigDecimal"/>
 	<parameter name="amount" class="java.math.BigDecimal"/>
 	<queryString>
@@ -228,7 +228,7 @@ Vehicle No:]]></text>
 				<textElement textAlignment="Center" verticalAlignment="Middle">
 					<font isBold="true"/>
 				</textElement>
-				<text><![CDATA[Quantity]]></text>
+				<text><![CDATA[Weight]]></text>
 			</staticText>
 			<staticText>
 				<reportElement x="341" y="96" width="98" height="29" uuid="920b8e0f-9c36-4ff2-ba07-62671808eb72">

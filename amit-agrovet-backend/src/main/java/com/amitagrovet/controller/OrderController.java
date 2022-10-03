@@ -1,8 +1,5 @@
 package com.amitagrovet.controller;
 
-import java.util.HashMap;
-import java.util.Map;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -17,7 +14,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.amitagrovet.dto.ResponseDto;
 import com.amitagrovet.entity.Order;
-import com.amitagrovet.entity.Party;
 import com.amitagrovet.entity.enums.OrderType;
 import com.amitagrovet.service.OrderService;
 import com.amitagrovet.service.ReportService;
@@ -42,6 +38,15 @@ public class OrderController {
 	ResponseEntity<?> getAllOrders(@PathVariable("month") String month, @PathVariable("type") OrderType type){
 		return new ResponseEntity<>(new ResponseDto<>("success", orderService.getAllOrdersByType(type, month)), HttpStatus.OK);
 	}
+	
+	@PostMapping("/report/{month}/{type}")
+	ResponseEntity<?> generateMonthlyReport(@PathVariable("month") String month, @PathVariable("type") OrderType type){		
+		String output = reportService.generateMonthlyReport(type, month);
+		if(output!=null)
+			return new ResponseEntity<>(new ResponseDto<>("success", output), HttpStatus.OK);
+		else
+			return new ResponseEntity<>(new ResponseDto<>("error", "PDF was not generated."), HttpStatus.INTERNAL_SERVER_ERROR);
+	}
 
 	@PostMapping("/new")
 	ResponseEntity<?> generateBill(@RequestBody Order order){
@@ -49,7 +54,7 @@ public class OrderController {
 		if(orderService.addOrEditOrder(order)!=null) {
 		
 			if(order.getOrderType().toString().equalsIgnoreCase("SELL")) {
-				String pdfPath = reportService.generateReportPdf(order);
+				String pdfPath = reportService.generateBillPdf(order);
 				if(pdfPath!="")		
 					return new ResponseEntity<>(new ResponseDto<>("success", "Bill PDF successfully generated and saved"), HttpStatus.CREATED);
 				else

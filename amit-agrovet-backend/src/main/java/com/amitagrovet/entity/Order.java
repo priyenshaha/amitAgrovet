@@ -3,19 +3,21 @@ package com.amitagrovet.entity;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
+import javax.persistence.UniqueConstraint;
 
 import org.springframework.format.annotation.DateTimeFormat;
 
 import com.amitagrovet.entity.enums.OrderType;
 
 @Entity
-@Table(name = "orders")
+@Table(name = "orders", uniqueConstraints = @UniqueConstraint(columnNames = {"party_id", "bill_number", "date"}))
 public class Order extends BaseEntity {
 	@ManyToOne
 	@JoinColumn(name = "party_id")
@@ -24,14 +26,15 @@ public class Order extends BaseEntity {
 	@Enumerated(EnumType.STRING)
 	private OrderType orderType;
 
+	@Column(name="bill_number")
 	private Integer billNumber;
 	private String vehicle;
 
 	@DateTimeFormat(pattern = "yyyy-mm-dd")
 	private LocalDate date;
 
-	private Integer quantity;
-	private BigDecimal amount;
+	private BigDecimal quantity;
+	
 	private Integer adjustedAmount;
 	
 	private String productName;
@@ -67,18 +70,13 @@ public class Order extends BaseEntity {
 	public void setDate(LocalDate date) {
 		this.date = date;
 	}
-	public Integer getQuantity() {
+	public BigDecimal getQuantity() {
 		return quantity;
 	}
-	public void setQuantity(Integer quantity) {
+	public void setQuantity(BigDecimal quantity) {
 		this.quantity = quantity;
 	}
-	public BigDecimal getAmount() {
-		return amount;
-	}
-	public void setAmount(BigDecimal amount) {
-		this.amount = amount;
-	}
+	
 	public Integer getAdjustedAmount() {
 		return adjustedAmount;
 	}
@@ -101,7 +99,7 @@ public class Order extends BaseEntity {
 	@Override
 	public String toString() {
 		return "Order [party=" + party + ", orderType=" + orderType + ", billNumber=" + billNumber + ", vehicle="
-				+ vehicle + ", date=" + date + ", quantity=" + quantity + ", amount=" + amount + ", adjustedAmount="
+				+ vehicle + ", date=" + date + ", quantity=" + quantity + ", adjustedAmount="
 				+ adjustedAmount + ", productName=" + productName + ", hsnCode="
 				+ hsnCode + "]";
 	}

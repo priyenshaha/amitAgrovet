@@ -3,14 +3,21 @@ package com.amitagrovet.service.impl;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDateTime;
+import java.time.Month;
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import com.amitagrovet.dto.ReportOrderDto;
 import com.amitagrovet.entity.Order;
+import com.amitagrovet.entity.enums.OrderType;
+import com.amitagrovet.service.OrderService;
 import com.amitagrovet.service.ReportService;
 
 import net.sf.jasperreports.engine.JREmptyDataSource;
@@ -20,25 +27,35 @@ import net.sf.jasperreports.engine.JasperExportManager;
 import net.sf.jasperreports.engine.JasperFillManager;
 import net.sf.jasperreports.engine.JasperPrint;
 import net.sf.jasperreports.engine.JasperReport;
+import net.sf.jasperreports.engine.data.JRBeanCollectionDataSource;
 
 @Service
 public class ReportServiceImpl implements ReportService {
 	
-	@Value("${jasper.template.path}")
+	@Value("${jasper.templates.path}")
 	String templatePath;
 	
 	@Value("${jasper.output.path}")
 	String outputPath;
-
+	
+	@Value("${jasper.invoice.name}")
+	String invoiceName;
+	
+	@Value("${jasper.report.name}")
+	String reportName;
+	
+	@Autowired
+	private OrderService orderService;
+	
 	@Override
-	public String generateReportPdf(Order order) {
+	public String generateBillPdf(Order order) {
 		String path="";
 		Map<String, Object> params = new HashMap<>();
 		populateParams(order, params);
 		try {
-			JasperReport report = JasperCompileManager.compileReport(templatePath);
+			JasperReport report = JasperCompileManager.compileReport(templatePath+invoiceName);
 			JasperPrint jp = JasperFillManager.fillReport(report, params, new JREmptyDataSource());
-			JasperExportManager.exportReportToPdfFile(jp, outputPath+"bill_"+order.getParty().getName()+"_"+LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd-MM-yyyy_HHmmss"))+".pdf");
+			JasperExportManager.exportReportToPdfFile(jp, outputPath+"/bills/"+"bill_"+order.getParty().getName()+"_"+LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd-MM-yyyy_HHmmss"))+".pdf");
 			path=outputPath+"bill_"+order.getParty().getName()+"_"+LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd-MM-yyyy_HHmmss"))+".pdf";
 		} catch (JRException e) {
 			e.printStackTrace();
@@ -48,8 +65,8 @@ public class ReportServiceImpl implements ReportService {
 
 	private void populateParams(Order order, Map<String, Object> params) {
 		BigDecimal price = order.getParty().getPrice();
-		BigDecimal amount = price.multiply(BigDecimal.valueOf(order.getQuantity()));
-
+		BigDecimal amount = price.multiply(order.getQuantity());
+		
 		params.put("name", order.getParty().getName());
 		params.put("address", order.getParty().getAddress());
 		params.put("gstNumber", order.getParty().getGstNumber());
@@ -61,7 +78,7 @@ public class ReportServiceImpl implements ReportService {
 		params.put("price", price);
 		params.put("amount", amount);
 		params.put("totalInWords", getTotalInWords(amount));
-
+		
 	}
 
 	private String getTotalInWords(BigDecimal amount) {
@@ -139,6 +156,45 @@ public class ReportServiceImpl implements ReportService {
 			word = word + " " + ones[num % 10];
 		}
 		return word;
+	}
+
+	
+	@Override
+	public String generateMonthlyReport(OrderType type, String month) {
+		List<ReportOrderDto> reportData = orderService.getAllOrdersByType(type, month)
+				.stream()
+				.map(order -> { 
+					ReportOrderDto newOrder = new ReportOrderDto();
+					newOrder.setDate(order.getDate());
+					newOrder.setBillNumber(order.getBillNumber());
+					newOrder.setName(order.getParty().getName());
+					newOrder.setGstNumber(order.getParty().getGstNumber());
+					newOrder.setStateCode(order.getParty().getStateCode());
+					newOrder.setHsnCode(order.getHsnCode());
+					newOrder.setWeight(order.getQuantity());
+					newOrder.setPrice(order.getParty().getPrice());
+					newOrder.setFinalAmount(order.getAdjustedAmount());
+					return newOrder; 
+				}).collect(Collectors.toList());
+		String[] monthData = month.split("-"); // value: 2022-09
+		String monthName = Month.of(Integer.valueOf(monthData[1])).toString();
+		String reportType = type.toString().equals("SELL")?"SALES":type.toString();
+		
+		Map<String, Object> params = new HashMap<>();
+		params.put("reportType", reportType);
+		params.put("month", monthName+" "+monthData[0]);
+		if(reportData==null || reportData.isEmpty()) {
+			return "No orders to generate report for "+monthName;
+		}
+		try {
+			JasperReport report = JasperCompileManager.compileReport(templatePath+reportName);
+			JasperPrint jp = JasperFillManager.fillReport(report, params, new JRBeanCollectionDataSource(reportData));
+			JasperExportManager.exportReportToPdfFile(jp, outputPath+"/reports/"+"AMIT AGROVET "+" "+reportType+" "+monthName+" "+monthData[0]+".pdf");
+			return "Report for "+monthName+" generated";
+		} catch (JRException e) {
+			e.printStackTrace();
+		}
+		return null;
 	}
 
 }
